@@ -1,6 +1,27 @@
+#########################################################
+# DISCLAIMER: #########################
+#########################################################
+# This script is provided "as-is" without any guarantees 
+# or warranties, express or implied.
+# The author assumes no responsibility for any issues or
+# damages resulting from its use.
+#
+# This script is provided for demonstration purposes only 
+# and should be treated as guidance.
+# The accuracy, completeness, or success of the code is 
+# not guaranteed. 
+# Use this code at your own risk, and adapt it to your 
+# specific requirements as needed.
+#
+# If you wish to perform these steps manually, use the 
+# script as guidance and follow the equivalent steps 
+# in the Azure portal.
+#########################################################
+
+
 #################
-# Example Script to demonstrate authenticating from a VM  to Azure Synapse
-# using a managed identity
+# Example Script to demonstrate authenticating from a VMto 
+# access Azure Synapse Analytics using Managed Identity
 #################
 # 
 # DESCRIPTION:
