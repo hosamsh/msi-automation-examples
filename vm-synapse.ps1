@@ -156,7 +156,7 @@ Write-Host "Creating Synapse Workspace: $synapseWorkspaceName" -ForegroundColor 
         --storage-account "$synapseWorkspaceName-adls"
 
 # -----------------------------------------------------------------------------
-# Create Synapse Managed Private Endpoint, which is used for 
+# OPTIONAL: Create Synapse Managed Private Endpoint, which is used for 
 # establishing private connectivity to the Synapse workspace assets. 
 # Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/security/how-to-create-managed-private-endpoints
 # -----------------------------------------------------------------------------
