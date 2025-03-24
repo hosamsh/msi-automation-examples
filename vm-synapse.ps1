@@ -81,7 +81,7 @@ $location = "East US" # NOTE: Change this to your preferred Azure region
 $synapseWorkspaceName = "msimove123" # NOTE: Set the Synapse workspace name
 $synapseAdminUser = "SynapseAdmin"  # NOTE: This will be created as Synapse admin account name
 $synapseAdminPassword =  "YourSecurePassword123!" # NOTE: Use a strong password for the Synapse admin account
-$gatewayName = "MySynapseGateway"
+$privateEndpointName = "MySynapseGateway"
 $synapseSqlPoolName = "mysynapsedb" # NOTE: This will be created as the dedicated SQL pool name
 $synapseSqlPoolPerfLevel = "DW100c" # NOTE: Set the performance level for the SQL pool
 
@@ -156,17 +156,18 @@ Write-Host "Creating Synapse Workspace: $synapseWorkspaceName" -ForegroundColor 
         --storage-account "$synapseWorkspaceName-adls"
 
 # -----------------------------------------------------------------------------
-# Create Synapse Managed Private Endpoint (Gateway)
+# Create Synapse Managed Private Endpoint, which is used for 
+# establishing private connectivity to the Synapse workspace assets. 
 # Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/security/how-to-create-managed-private-endpoints
 # -----------------------------------------------------------------------------
-Write-Host "Creating Synapse Managed Private Endpoint (Gateway): $gatewayName" -ForegroundColor Cyan
+Write-Host "Creating Synapse Managed Private Endpoint: $privateEndpointName" -ForegroundColor Cyan
     az synapse managed-private-endpoint create `
         --workspace-name "$synapseWorkspaceName" `
-        --name "$gatewayName" `
+        --name "$privateEndpointName" `
         --resource-group "$resourceGroupName" `
         --target-resource-id "/subscriptions/$subscriptionId/resourceGroups/$resourceGroupName/providers/Microsoft.Sql/servers/$synapseWorkspaceName"
 
-Write-Host "✅ Synapse Managed Private Endpoint '$gatewayName' created successfully!" -ForegroundColor Green
+Write-Host "✅ Synapse Managed Private Endpoint '$privateEndpointName' created successfully!" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
 # The default workspace identity (system assigned) - Not used in the script
@@ -244,7 +245,7 @@ Write-Host "Performing a quick test connect to the VM via SSH..." -ForegroundCol
 ssh -i $sshKey $vmUser@$vmIp "echo Hello from inside the Linux VM!!!"
 
 # -----------------------------------------------------------------------------
-# Allow the VM's public IP in Synapse workspace firewall
+# Allow the VM's public IP in Synapse workspace firewall (Gateway)
 # Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/security/synapse-workspace-ip-firewall
 # -----------------------------------------------------------------------------
 Write-Host "Allowing VM's public IP in Synapse workspace firewall..." -ForegroundColor Cyan
