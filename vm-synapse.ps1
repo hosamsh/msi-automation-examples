@@ -13,9 +13,10 @@
 # Use this code at your own risk, and adapt it to your 
 # specific requirements as needed.
 #
-# If you wish to perform these steps manually, use the 
+# NOTE: If you wish to perform these steps manually, use the 
 # script as guidance and follow the equivalent steps 
-# in the Azure portal.
+# in the Azure portal. References are provided in the 
+# comments where relevant.
 #########################################################
 
 
@@ -144,6 +145,7 @@ if (-not (az group exists --name "$resourceGroupName")) {
 
 # -----------------------------------------------------------------------------
 # Create Synapse Workspace
+# Using the portal: https://learn.microsoft.com/azure/synapse-analytics/quickstart-create-workspace
 # -----------------------------------------------------------------------------
 Write-Host "Creating Synapse Workspace: $synapseWorkspaceName" -ForegroundColor Cyan
     az synapse workspace create --name "$synapseWorkspaceName" `
@@ -155,6 +157,7 @@ Write-Host "Creating Synapse Workspace: $synapseWorkspaceName" -ForegroundColor 
 
 # -----------------------------------------------------------------------------
 # Create Synapse Managed Private Endpoint (Gateway)
+# Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/security/how-to-create-managed-private-endpoints
 # -----------------------------------------------------------------------------
 Write-Host "Creating Synapse Managed Private Endpoint (Gateway): $gatewayName" -ForegroundColor Cyan
     az synapse managed-private-endpoint create `
@@ -171,7 +174,8 @@ Write-Host "✅ Synapse Managed Private Endpoint '$gatewayName' created successf
 $workspaceIdentityId = az synapse workspace show --name $synapseWorkspaceName --resource-group "$resourceGroupName" --query identity.principalId --output tsv
 
 # -----------------------------------------------------------------------------
-# Create a new Synapse SQL Pool
+# Optional: Create a new Synapse SQL Pool
+# Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/quickstart-create-sql-pool-portal
 # -----------------------------------------------------------------------------
 # This creates a dedicated SQL pool named "mysynapsedb"
 Write-Host "Creating Synapse SQL Pool: $synapseSqlPoolName" -ForegroundColor Cyan
@@ -185,6 +189,8 @@ Write-Host "✅ Synapse SQL Pool '$synapseSqlPoolName' created successfully!" -F
 
 # -----------------------------------------------------------------------------
 # Create Linux VM with System-Assigned MSI
+# Using the portal: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal
+# Configure msi's: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities
 # -----------------------------------------------------------------------------
 Write-Host "Creating Linux VM: $vmName" -ForegroundColor Cyan
 
@@ -220,6 +226,7 @@ Write-Host "✅ Managed Identity assigned to VM '$vmName', principal id='$msiObj
 
 # -----------------------------------------------------------------------------
 # Quick SSH test to make sure the VM is accessible
+# Use ssh: https://learn.microsoft.com/en-us/azure/virtual-machines/linux-vm-connect
 # -----------------------------------------------------------------------------
 Write-Host "Getting Public IP of VM..." -ForegroundColor Cyan
 $vmIp = az vm show `
@@ -238,6 +245,7 @@ ssh -i $sshKey $vmUser@$vmIp "echo Hello from inside the Linux VM!!!"
 
 # -----------------------------------------------------------------------------
 # Allow the VM's public IP in Synapse workspace firewall
+# Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/security/synapse-workspace-ip-firewall
 # -----------------------------------------------------------------------------
 Write-Host "Allowing VM's public IP in Synapse workspace firewall..." -ForegroundColor Cyan
 az synapse workspace firewall-rule create `
@@ -249,6 +257,7 @@ az synapse workspace firewall-rule create `
 
 # -----------------------------------------------------------------------------
 # Assign the "Contributor" role to the VM's MSI on the Synapse workspace scope
+# Using the portal: https://learn.microsoft.com/en-us/azure/synapse-analytics/security/how-to-manage-synapse-rbac-role-assignments#add-a-synapse-role-assignment
 # -----------------------------------------------------------------------------
 Write-Host "Assigning Contributor role to the VM" -ForegroundColor Cyan
 
@@ -268,6 +277,9 @@ az role assignment create `
 # -----------------------------------------------------------------------------
 # Here's a script that installs the Azure CLI inside the VM and tests
 # Synapse management-plane access with the VM's MSI
+# references:
+# - Install Az CLI on Linux: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux
+# - Use MSI on a VM to acquier access tokens: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token
 # -----------------------------------------------------------------------------
 Write-Host "Using SSH to test Synapse access from the VM..." -ForegroundColor Cyan
 $scriptContent = @'
@@ -308,18 +320,20 @@ echo "If you need to test the data plane, you’ll have to add the MSI as an AAD
 # NOTE: The command below inlines the entire script as a single argument to ssh
 # If single-quotes appear, it can break. Great if it works for you. 
 # Otherwise, consider using scp + ssh or a bash heredoc approach.
-## example with scp + ssh:
+# example with scp + ssh:
 # 
 # $tempFile = [System.IO.Path]::GetTempFileName()
 # Set-Content -Path $tempFile -Value $scriptContent
 
-# # Upload the temp file to the VM using SCP
+## Upload the temp file to the VM using SCP
 # Write-Host "Uploading script to VM..." -ForegroundColor Cyan
 # scp -i $sshKey $tempFile "$vmUser@$vmIp`:test_synapse.sh"
 
 # # Set permissions and run the script
 # Write-Host "Running script on VM..." -ForegroundColor Cyan
 # ssh -i $sshKey $vmUser@$vmIp "chmod +x test_synapse.sh && ./test_synapse.sh"
+###### If the script fails, try SSH'ing to the VM and running the script.
+
 
 ssh -i $sshKey $vmUser@$vmIp "$scriptContent"
 

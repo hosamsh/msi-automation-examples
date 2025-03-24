@@ -13,9 +13,10 @@
 # Use this code at your own risk, and adapt it to your 
 # specific requirements as needed.
 #
-# If you wish to perform these steps manually, use the 
+# NOTE: If you wish to perform these steps manually, use the 
 # script as guidance and follow the equivalent steps 
-# in the Azure portal.
+# in the Azure portal. References are provided in the 
+# comments where relevant.
 #########################################################
 
 
@@ -121,7 +122,7 @@ foreach ($provider in $providers) {
 }
 
 # -----------------------------------------------------------------------------
-# Create Resource Group (If Not Exists)
+# Create Resource Group 
 # -----------------------------------------------------------------------------
 if (-not (az group exists --name "$resourceGroupName")) {
     Write-Host "Creating Resource Group: $resourceGroupName" -ForegroundColor Cyan
@@ -129,7 +130,8 @@ if (-not (az group exists --name "$resourceGroupName")) {
 }
 
 # -----------------------------------------------------------------------------
-# Create Log Analytics Workspace (If Not Exists)
+# Create Log Analytics Workspace 
+# Using the portal: https://learn.microsoft.com/en-us/azure/azure-monitor/app/create-workspace-resource?tabs=portal
 # -----------------------------------------------------------------------------
 Write-Host "Creating Log Analytics Workspace: $logAnalyticsWorkspaceName" -ForegroundColor Cyan
 $workspaceId = az monitor log-analytics workspace create `
@@ -140,7 +142,7 @@ $workspaceId = az monitor log-analytics workspace create `
     --output tsv
 
 # -----------------------------------------------------------------------------
-# Create Application Insights (If Not Exists)
+# Create Application Insights 
 # -----------------------------------------------------------------------------
 Write-Host "Creating Application Insights: $appInsightsName" -ForegroundColor Cyan
 $appInsightsId = az monitor app-insights component create `
@@ -165,6 +167,8 @@ $appInsightsId = az monitor app-insights component create `
 
 # -----------------------------------------------------------------------------
 # Create Linux VM with System-Assigned MSI
+# Using the portal: https://learn.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-portal
+# Configure msi's: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-configure-managed-identities
 # -----------------------------------------------------------------------------
 Write-Host "Creating Linux VM with Managed Identity: $vmName" -ForegroundColor Cyan
 az vm create `
@@ -193,7 +197,8 @@ $msiObjectId = az vm show `
 Write-Host "✅ VM with MSI created successfully. MSI Principal ID: $msiObjectId" -ForegroundColor Green
 
 # -----------------------------------------------------------------------------
-# Get Public IP of VM & quick SSH test
+# Quick SSH test to make sure the VM is accessible
+# Use ssh: https://learn.microsoft.com/en-us/azure/virtual-machines/linux-vm-connect
 # -----------------------------------------------------------------------------
 $vmIp = az vm show `
     --name $vmName `
@@ -208,6 +213,7 @@ ssh -i $sshKey $vmUser@$vmIp "echo Hello from inside the Linux VM!!!"
 
 # -----------------------------------------------------------------------------
 # Assign roles to the VM's MSI
+# https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-assign-access-azure-resource
 # -----------------------------------------------------------------------------
 Write-Host "Assigning 'Monitoring Reader' role to VM's managed identity..." -ForegroundColor Cyan
 az role assignment create `
@@ -223,7 +229,10 @@ az role assignment create `
     --scope $workspaceId
 
 # -----------------------------------------------------------------------------
-# Install Azure CLI inside VM and test Application Insights access with MSI
+# Here's a script to run on the VM to test the MSI authentication to Application Insights
+# references:
+# - Install Az CLI on Linux: https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux
+# - Use MSI on a VM to acquier access tokens: https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/how-to-use-vm-token
 # -----------------------------------------------------------------------------
 $scriptContent = @'
 #!/bin/bash
